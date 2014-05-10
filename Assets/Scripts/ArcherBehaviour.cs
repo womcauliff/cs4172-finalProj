@@ -26,14 +26,31 @@ public class ArcherBehaviour : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (currentTarget) {
-			Vector3 tarPos = currentTarget.transform.position;
-			Quaternion neededRotation = Quaternion.LookRotation(tarPos - this.transform.position);
-			Quaternion interpolatedRotation = Quaternion.Slerp(this.transform.rotation, neededRotation, Time.deltaTime * .01f);
+			Debug.Log("Archer A.I.!");
+			float damping = .01f;
+			Transform target = currentTarget.transform;
+			Vector3 lookPos = target.position - this.transform.position;
+			lookPos.y = 0;
+			Quaternion rotation = Quaternion.LookRotation(lookPos);
+			this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rotation, Time.deltaTime * damping);
 
-			this.transform.rotation = interpolatedRotation;
+			//OLD OLD OLD CODE
+			//			Vector3 tarPos = currentTarget.transform.position;
+			//			Quaternion neededRotation = Quaternion.LookRotation(tarPos - this.transform.position);
+			//			Quaternion interpolatedRotation = Quaternion.Slerp(this.transform.rotation, neededRotation, Time.deltaTime * .01f);
+			//			this.transform.rotation = interpolatedRotation;
 			//			wpPos.y = 5;//adjusted for realistic soldier movement
-//			transform.LookAt (wpPos);
-//			transform.position = Vector3.MoveTowards (transform.position, wpPos, 0.10f);
+			//			transform.LookAt (wpPos);
+			//			transform.position = Vector3.MoveTowards (transform.position, wpPos, 0.10f);
+
+			/* COPY PASTED CODE (javascript)
+			 * var damping:int=2;
+			 * var target:Transform;
+			 * var lookPos = target.position - transform.position;
+			 * lookPos.y = 0;
+			 * var rotation = Quaternion.LookRotation(lookPos);
+			 * transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * damping); 
+			 */
 		} else {
 			setCurrentTarget();
 		}

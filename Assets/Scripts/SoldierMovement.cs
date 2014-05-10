@@ -31,7 +31,15 @@ public class SoldierMovement : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+		if (!added) {
+			GameObject[] archers = GameObject.FindGameObjectsWithTag ("archers");
+			foreach(GameObject archer in archers) {
+				if (archer) {
+					archer.GetComponent<ArcherBehaviour> ().addNewTarget();
+				}
+			}
+			added = true;
+		}
 		//		Debug.Log (q.ToString());
 		//		Debug.Log (q.Count);
 		//
