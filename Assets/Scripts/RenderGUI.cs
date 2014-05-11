@@ -5,18 +5,59 @@ public class RenderGUI : MonoBehaviour {
 
 	private GUIStyle cameraStyle;
 	private GameObject toolbar;
-	private VirtualButtonEventHandler handler;
+	public GameObject world;
+	private GameObject wand;
+
+	private VirtualButtonEventHandler virtualButtonHandler;
+	private SelectionHandler wandHandler;
 	private bool hasSpawnedObject = false;
+	private bool hasAttachedObjectToWand = false;
+	private bool hasSoldiers = false;
+
+	private bool hasShoot = false;
 
 	// Use this for initialization
 	void Start () {
 		toolbar = GameObject.Find ("Toolbar");
-		handler = toolbar.GetComponent <VirtualButtonEventHandler>();
+		wand = GameObject.Find ("Wand");
+		virtualButtonHandler = toolbar.GetComponent <VirtualButtonEventHandler>();
+		wandHandler = this.GetComponent <SelectionHandler> ();
 	}
 
 	// Update is called once per frame
 	void Update () {
-		hasSpawnedObject = handler.hasSpawnedObject;
+		hasSpawnedObject = virtualButtonHandler.hasSpawnedObject;
+  	hasAttachedObjectToWand = wandHandler.hasAttachedObject;
+		hasSoldiers = this.countWorldSoldiers ();
+
+
+	}
+
+	void LateUpdate () {
+		if (hasShoot) {
+			StartCoroutine(ShootOneCannonball());
+			hasShoot = false;
+		}
+	}
+
+	private bool countWorldSoldiers () {
+		bool soldiers = false;
+		foreach (Transform child in world.transform) {
+			if (child.gameObject.tag == "footsoldiers") {
+				soldiers = true;
+				break;
+			}
+		}
+		return soldiers;
+	}
+
+	private IEnumerator ShootOneCannonball() {
+		Debug.Log ("Shooting..");
+		CannonShootHandler.toggleShooting = true;
+		Debug.Log ("Waiting..");
+		yield return new WaitForSeconds(0.01f);
+		Debug.Log ("Stop..");
+		CannonShootHandler.toggleShooting = false;
 	}
 
 	public void OnGUI () {
@@ -25,24 +66,61 @@ public class RenderGUI : MonoBehaviour {
 		cameraStyle = new GUIStyle(GUI.skin.button);
 		cameraStyle.fontSize = 30;
 
-    if (GUI.Button (new Rect (Screen.width - 120, Screen.height - 120, 100, 100), "X", cameraStyle)) {
-      Application.LoadLevel(0);
-    }
+	    if (GUI.Button (new Rect (Screen.width - 120, Screen.height - 120, 100, 100), "X", cameraStyle)) {
+	      Application.LoadLevel(0);
+	    }
 
-		if (GUI.Button (new Rect (20, 20, 280, 120), "Move Soldiers", cameraStyle)) {
-			GameObject footsoldiers = GameObject.FindGameObjectWithTag("footsoldiers");
-			footsoldiers.GetComponent<SoldierMovement> ().setMoveSoldiers ();
-		}
+		if (hasSoldiers && !wandHandler.selectedObject) {
+			if (GUI.Button (new Rect (20, 20, 280, 120), "Move Soldiers", cameraStyle)) {
+				GameObject footsoldiers = GameObject.FindGameObjectWithTag("footsoldiers");
+				Debug.Log ("Move Soldier Pushed..");
+				footsoldiers.GetComponent<SoldierMovement> ().setMoveSoldiers (true);
+			}
 
-		if (GUI.Button (new Rect (20, 150, 280, 120), "Waypoint Mode", cameraStyle)) {
-			// waypoint toggle bool
-			SetWaypoint.toggleWaypointMode = !SetWaypoint.toggleWaypointMode;
+			if (GUI.Button (new Rect (20, 150, 280, 120), "Waypoint Mode", cameraStyle)) {
+				// waypoint toggle bool
+				SetWaypoint.toggleWaypointMode = !SetWaypoint.toggleWaypointMode;
+			}
 		}
 
 		if (hasSpawnedObject){
 			if (GUI.Button (new Rect (20, 280, 280, 120), "Drop Object", cameraStyle)) {
 				SetSpawnedObject.toggleSetSpawnedObject = !SetSpawnedObject.toggleSetSpawnedObject;
-        handler.hasSpawnedObject = !handler.hasSpawnedObject;
+        		virtualButtonHandler.hasSpawnedObject = !virtualButtonHandler.hasSpawnedObject;
+			}
+		}
+
+		if (hasAttachedObjectToWand) {
+			if (GUI.Button (new Rect (20, 280, 280, 120), "Drop Object", cameraStyle)) {
+				SetSpawnedObject.toggleSetSpawnedObject = !SetSpawnedObject.toggleSetSpawnedObject;
+				if (wandHandler.selectedObject.transform.tag == "footsoldiers") {
+					wandHandler.selectedObject.gameObject.AddComponent<Rigidbody>();
+					wandHandler.gameObject.AddComponent("SoldierMovement");
+				}
+				wandHandler.hasAttachedObject = !wandHandler.hasAttachedObject;
+			}
+		}
+
+		if (wandHandler.selectedObject) {
+			if (wandHandler.selectedObject.tag == "footsoldiers" && !hasAttachedObjectToWand) {
+				if (GUI.Button (new Rect (20, 20, 280, 120), "Attach To Wand", cameraStyle)) {
+					wandHandler.selectedObject.transform.parent = wand.transform;
+					wandHandler.selectedObject.transform.localPosition = Vector3.zero;
+					wandHandler.hasAttachedObject = !wandHandler.hasAttachedObject;
+					Destroy(wandHandler.selectedObject.GetComponent<Rigidbody>());
+					Destroy(wandHandler.selectedObject.GetComponent("SoldierMovement"));
+				}
+			}
+			if (wandHandler.selectedObject.tag == "trebuchet" && !hasAttachedObjectToWand) {
+				if (GUI.Button (new Rect (20, 20, 280, 120), "Attach To Wand", cameraStyle)) {
+					wandHandler.selectedObject.transform.parent = wand.transform;
+					wandHandler.selectedObject.transform.localPosition = new Vector3 (0.0f, 0.3f, 0.0f);
+					wandHandler.hasAttachedObject = !wandHandler.hasAttachedObject;
+				}
+
+				if (GUI.Button (new Rect (20, 150, 280, 120), "Shoot", cameraStyle)) {
+					hasShoot = true;
+				}
 			}
 		}
 	}
