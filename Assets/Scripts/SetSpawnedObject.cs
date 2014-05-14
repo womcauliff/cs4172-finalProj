@@ -7,17 +7,18 @@ public class SetSpawnedObject : MonoBehaviour {
 	private Transform wand;
 	private Transform spawnedObject;
 
+	private SoldierMovement soldierMovementHandler;
+	private CannonBehaviour cannonBehaviour;
+
 	public static bool toggleSetSpawnedObject = false;
 
 	void Start () {
-		/*world = GameObject.Find("SceneObjects").transform;*/
 		wand = GameObject.Find ("Wand").transform;
 	}
 
 	void LateUpdate(){
 		if (toggleSetSpawnedObject) {
 			this.setObjectToWorld();
-//			this.printWorldObjects();
 			toggleSetSpawnedObject = false;
 		}
 	}
@@ -49,11 +50,17 @@ public class SetSpawnedObject : MonoBehaviour {
 			spawnedObject.gameObject.AddComponent("SoldierMovement");
 			spawnedObject.rigidbody.constraints = RigidbodyConstraints.FreezeRotationX;
 			spawnedObject.position = new Vector3 (spawnedObject.position.x, world.position.y, spawnedObject.position.z);
+
+			soldierMovementHandler = spawnedObject.gameObject.GetComponent("SoldierMovement") as SoldierMovement;
+			soldierMovementHandler.notifyArchers();
 		}
 
 		if (spawnedObject.tag == "trebuchet") {
 			spawnedObject.localScale = new Vector3(1.3f, 1.3f, 1.3f);
 			spawnedObject.position = new Vector3 (spawnedObject.position.x, world.position.y + 0.7f, spawnedObject.position.z);
+			spawnedObject.gameObject.AddComponent("CannonBehaviour");
+			cannonBehaviour = spawnedObject.gameObject.GetComponent("CannonBehaviour") as CannonBehaviour;
+			cannonBehaviour.notifyArchers();
 		}
 	}
 
